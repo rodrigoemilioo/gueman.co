@@ -1,6 +1,6 @@
 // ── API CLIENT ────────────────────────────────────────────────
 // Centraliza todas as chamadas ao backend
-const API_BASE = '/api';
+const API_BASE = 'https://SEU-BACKEND-AQUI';
 
 const API = {
   // Produtos
