@@ -1,0 +1,75 @@
+body {
+  background: #000;
+  color: #fff;
+  font-family: 'Barlow', sans-serif;
+  margin: 0;
+}
+
+/* NAVBAR */
+.nav {
+  position: sticky;
+  top: 0;
+  background: #000;
+  border-bottom: 1px solid #111;
+  padding: 15px 30px;
+}
+
+.logo {
+  font-weight: 900;
+  font-size: 24px;
+}
+
+.logo span {
+  color: #00ff88;
+}
+
+/* PRODUTOS */
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 24px;
+  padding: 40px;
+}
+
+/* CARD */
+.product-card {
+  background: #111;
+  border-radius: 16px;
+  padding: 16px;
+  transition: 0.3s;
+}
+
+.product-card:hover {
+  transform: scale(1.05);
+}
+
+/* IMAGEM */
+.product-card img {
+  width: 100%;
+  border-radius: 12px;
+}
+
+/* TEXTO */
+.product-card h3 {
+  margin: 10px 0;
+}
+
+.price {
+  font-size: 20px;
+  font-weight: bold;
+}
+
+/* BOTÃO */
+button {
+  width: 100%;
+  padding: 12px;
+  background: #00ff88;
+  border: none;
+  border-radius: 10px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+button:hover {
+  opacity: 0.8;
+}
