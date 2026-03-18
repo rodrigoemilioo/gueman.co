@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Admin — gueman.co</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;900&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#07090f;--bg2:#0d1117;--bg3:#111827;--blue:#1d4ed8;--blue-b:#3b82f6;--white:#f8fafc;--g3:#94a3b8;--g5:#64748b;--g7:#334155;--red:#ef4444;--green:#22c55e;--gold:#f59e0b;--r:6px}
+body{background:var(--bg);color:var(--white);font-family:'Barlow',sans-serif;font-size:14px;min-height:100vh}
+.nav-a{background:var(--bg2);border-bottom:1px solid rgba(59,130,246,.15);padding:0 24px;height:56px;display:flex;align-items:center;gap:16px}
+.logo{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;letter-spacing:2px;background:linear-gradient(135deg,#f8fafc,#93c5fd);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.nav-a span{font-size:11px;color:var(--g5);letter-spacing:1px;text-transform:uppercase}
+.nav-a a{margin-left:auto;color:var(--g5);font-size:12px;text-decoration:none;transition:.2s;letter-spacing:.5px}
+.nav-a a:hover{color:var(--white)}
+
+/* LOGIN */
+.login-wrap{display:flex;align-items:center;justify-content:center;min-height:calc(100vh - 56px);padding:24px}
+.login-box{background:var(--bg2);border:1px solid rgba(59,130,246,.15);border-radius:12px;padding:40px;width:100%;max-width:360px;text-align:center}
+.login-box h1{font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:900;letter-spacing:2px;margin-bottom:8px}
+.login-box p{color:var(--g5);font-size:13px;margin-bottom:28px}
+.login-box input{width:100%;padding:13px 16px;background:var(--bg3);border:1.5px solid rgba(255,255,255,.08);border-radius:var(--r);color:var(--white);font-size:14px;outline:none;text-align:center;letter-spacing:4px;margin-bottom:12px;transition:.2s}
+.login-box input:focus{border-color:var(--blue-b)}
+.login-box button{width:100%;padding:14px;background:var(--blue);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;border:none;border-radius:var(--r);cursor:pointer;transition:.2s}
+.login-box button:hover{background:var(--blue-b)}
+.err-msg{color:var(--red);font-size:12px;margin-top:8px}
+
+/* ADMIN LAYOUT */
+.admin-wrap{display:grid;grid-template-columns:220px 1fr;min-height:calc(100vh - 56px)}
+.sidebar{background:var(--bg2);border-right:1px solid rgba(59,130,246,.1);padding:24px 0}
+.side-item{display:flex;align-items:center;gap:10px;padding:12px 20px;font-size:13px;font-weight:500;color:var(--g3);cursor:pointer;transition:.2s;border-left:2px solid transparent}
+.side-item:hover{color:var(--white);background:rgba(59,130,246,.05)}
+.side-item.act{color:var(--blue-b);border-left-color:var(--blue-b);background:rgba(59,130,246,.08)}
+.side-icon{font-size:16px;width:18px;text-align:center}
+.main-a{padding:32px;overflow-y:auto}
+
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:32px}
+.stat-card{background:var(--bg2);border:1px solid rgba(59,130,246,.1);border-radius:10px;padding:20px}
+.stat-l{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--g5);margin-bottom:6px}
+.stat-v{font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:900;line-height:1}
+.stat-v.blue{color:var(--blue-b)} .stat-v.green{color:var(--green)} .stat-v.gold{color:var(--gold)}
+
+/* SECTION HEADER */
+.sec-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.sec-h h2{font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:900;letter-spacing:1px;text-transform:uppercase}
+.btn-sm{padding:8px 16px;background:var(--blue);color:#fff;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;border:none;border-radius:var(--r);cursor:pointer;transition:.2s}
+.btn-sm:hover{background:var(--blue-b)}
+.btn-sm.ghost{background:none;border:1px solid rgba(255,255,255,.15);color:var(--g3)}
+.btn-sm.ghost:hover{border-color:var(--blue-b);color:var(--white)}
+.btn-sm.danger{background:rgba(239,68,68,.15);color:var(--red);border:1px solid rgba(239,68,68,.2)}
+.btn-sm.danger:hover{background:var(--red);color:#fff}
+
+/* TABLE */
+.tbl{width:100%;border-collapse:collapse}
+.tbl th{text-align:left;font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--g5);padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.06)}
+.tbl td{padding:14px;border-bottom:1px solid rgba(255,255,255,.04);font-size:13px;vertical-align:middle}
+.tbl tr:hover td{background:rgba(59,130,246,.03)}
+.pill{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:100px;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+.pill.pend{background:rgba(245,158,11,.15);color:var(--gold)}
+.pill.appr{background:rgba(34,197,94,.12);color:var(--green)}
+.pill.new{background:rgba(59,130,246,.15);color:var(--blue-b)}
+.pill.conf{background:rgba(34,197,94,.1);color:var(--green)}
+.pill.ship{background:rgba(147,51,234,.15);color:#a855f7}
+.pill.deliv{background:rgba(34,197,94,.2);color:var(--green)}
+.pill.canc{background:rgba(239,68,68,.1);color:var(--red)}
+select.st-sel{padding:5px 8px;font-size:11px;border:1px solid rgba(255,255,255,.08);border-radius:var(--r);background:var(--bg3);color:var(--g3);cursor:pointer;outline:none}
+
+/* PRODUCTS ADMIN */
+.prod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px}
+.prod-card{background:var(--bg2);border:1px solid rgba(59,130,246,.1);border-radius:10px;overflow:hidden}
+.prod-card-img{aspect-ratio:1;background:var(--bg3);position:relative;overflow:hidden}
+.prod-card-img img{width:100%;height:100%;object-fit:cover}
+.prod-card-img .no-img{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:8px;color:var(--g7);font-size:12px}
+.prod-card-img .no-img-icon{font-size:32px;opacity:.4}
+.img-count{position:absolute;top:8px;right:8px;background:rgba(0,0,0,.7);color:var(--white);font-family:'JetBrains Mono',monospace;font-size:10px;padding:3px 8px;border-radius:4px}
+.prod-card-body{padding:14px}
+.prod-card-brand{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--blue-b);margin-bottom:3px}
+.prod-card-name{font-size:13px;font-weight:500;margin-bottom:10px;line-height:1.3}
+.prod-card-price{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;margin-bottom:12px}
+.prod-card-actions{display:flex;gap:6px}
+
+/* IMAGE MANAGER MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px}
+.modal{background:var(--bg2);border:1px solid rgba(59,130,246,.2);border-radius:12px;width:100%;max-width:640px;max-height:90vh;overflow-y:auto}
+.modal-head{padding:20px 24px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;justify-content:space-between}
+.modal-head h3{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;letter-spacing:1px;text-transform:uppercase}
+.modal-close{width:32px;height:32px;border-radius:var(--r);border:1px solid rgba(255,255,255,.1);background:none;color:var(--g3);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:.2s}
+.modal-close:hover{background:rgba(239,68,68,.1);color:var(--red);border-color:rgba(239,68,68,.3)}
+.modal-body{padding:24px}
+.img-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px}
+.img-slot{aspect-ratio:1;border-radius:8px;overflow:hidden;position:relative;background:var(--bg3)}
+.img-slot img{width:100%;height:100%;object-fit:cover}
+.img-slot-del{position:absolute;top:6px;right:6px;width:24px;height:24px;background:rgba(239,68,68,.9);border:none;border-radius:4px;color:#fff;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;opacity:0;transition:.2s}
+.img-slot:hover .img-slot-del{opacity:1}
+.upload-area{border:2px dashed rgba(59,130,246,.3);border-radius:10px;padding:32px;text-align:center;cursor:pointer;transition:.2s;position:relative}
+.upload-area:hover,.upload-area.drag{border-color:var(--blue-b);background:rgba(59,130,246,.05)}
+.upload-area input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.upload-icon{font-size:32px;margin-bottom:10px;opacity:.5}
+.upload-title{font-size:14px;font-weight:500;margin-bottom:4px}
+.upload-sub{font-size:12px;color:var(--g5)}
+.upload-progress{margin-top:12px;background:var(--bg3);border-radius:4px;height:4px;overflow:hidden;display:none}
+.upload-progress-bar{height:100%;background:var(--blue-b);transition:width .3s;border-radius:4px}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(12px);background:var(--bg3);color:var(--white);border:1px solid rgba(59,130,246,.3);padding:12px 20px;border-radius:var(--r);font-size:13px;opacity:0;pointer-events:none;transition:.3s;z-index:9999;white-space:nowrap}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.ok{border-color:rgba(34,197,94,.4)}
+.toast.err{border-color:rgba(239,68,68,.4)}
+
+/* RESPONSIVE */
+@media(max-width:900px){
+  .admin-wrap{grid-template-columns:1fr}
+  .sidebar{display:none}
+  .stats-grid{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+
+<nav class="nav-a">
+  <div class="logo">GUEMAN<span style="-webkit-text-fill-color:rgba(147,197,253,.6)">.CO</span></div>
+  <span>Painel Admin</span>
+  <a href="/" style="margin-left:auto">← Ver loja</a>
+  <a href="#" onclick="logout()" style="margin-left:16px;color:var(--red)">Sair</a>
+</nav>
+
+<div id="loginScreen" class="login-wrap">
+  <div class="login-box">
+    <h1>ADMIN</h1>
+    <p>gueman.co — Painel de controle</p>
+    <input type="password" id="passInput" placeholder="••••••••" onkeypress="if(event.key==='Enter')doLogin()"/>
+    <button onclick="doLogin()">Entrar</button>
+    <div class="err-msg" id="loginErr"></div>
+  </div>
+</div>
+
+<div id="adminPanel" style="display:none">
+  <div class="admin-wrap">
+    <div class="sidebar">
+      <div class="side-item act" onclick="showTab('dashboard')" id="tab-dashboard">
+        <span class="side-icon">◈</span> Dashboard
+      </div>
+      <div class="side-item" onclick="showTab('orders')" id="tab-orders">
+        <span class="side-icon">◎</span> Pedidos
+      </div>
+      <div class="side-item" onclick="showTab('products')" id="tab-products">
+        <span class="side-icon">◻</span> Produtos e Imagens
+      </div>
+    </div>
+    <div class="main-a" id="mainArea"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let TOKEN = localStorage.getItem('gueman_admin_token');
+const API = '/api';
+
+// ── AUTH ──────────────────────────────────────────────────────
+async function doLogin() {
+  const pass = document.getElementById('passInput').value;
+  if (!pass) return;
+  const res = await fetch(`${API}/admin/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ password: pass })
+  });
+  const data = await res.json();
+  if (data.success) {
+    TOKEN = data.token;
+    localStorage.setItem('gueman_admin_token', TOKEN);
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('adminPanel').style.display = 'block';
+    showTab('dashboard');
+  } else {
+    document.getElementById('loginErr').textContent = 'Senha incorreta';
+  }
+}
+
+function logout() {
+  localStorage.removeItem('gueman_admin_token');
+  location.reload();
+}
+
+// Auto-login se token salvo
+if (TOKEN) {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('adminPanel').style.display = 'block';
+  showTab('dashboard');
+}
+
+// ── TABS ──────────────────────────────────────────────────────
+function showTab(tab) {
+  document.querySelectorAll('.side-item').forEach(el => el.classList.remove('act'));
+  document.getElementById('tab-' + tab)?.classList.add('act');
+  if (tab === 'dashboard') renderDashboard();
+  if (tab === 'orders') renderOrders();
+  if (tab === 'products') renderProducts();
+}
+
+// ── TOAST ─────────────────────────────────────────────────────
+let _tt;
+function toast(msg, type = '') {
+  const el = document.getElementById('toast');
+  clearTimeout(_tt);
+  el.textContent = msg;
+  el.className = `toast on ${type}`;
+  _tt = setTimeout(() => el.classList.remove('on'), 2800);
+}
+
+function fmt(n) { return Number(n).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
+function fdate(iso) { return new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }); }
+
+// ── DASHBOARD ─────────────────────────────────────────────────
+async function renderDashboard() {
+  const area = document.getElementById('mainArea');
+  area.innerHTML = '<div style="color:var(--g5);padding:40px;text-align:center">Carregando...</div>';
+  try {
+    const stats = await fetch(`${API}/admin/stats`, { headers: { 'x-admin-token': TOKEN } }).then(r => r.json());
+    const orders = await fetch(`${API}/admin/orders`, { headers: { 'x-admin-token': TOKEN } }).then(r => r.json());
+    const recent = orders.slice(0, 5);
+
+    area.innerHTML = `
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-l">Total Pedidos</div><div class="stat-v blue">${stats.total_orders}</div></div>
+      <div class="stat-card"><div class="stat-l">Receita</div><div class="stat-v green" style="font-size:22px">${fmt(stats.revenue)}</div></div>
+      <div class="stat-card"><div class="stat-l">Aguardando</div><div class="stat-v gold">${stats.pending_orders}</div></div>
+      <div class="stat-card"><div class="stat-l">Produtos Ativos</div><div class="stat-v">${stats.total_products}</div></div>
+    </div>
+    <div class="sec-h"><h2>Pedidos Recentes</h2><button class="btn-sm ghost" onclick="showTab('orders')">Ver todos</button></div>
+    <div style="overflow-x:auto">
+      <table class="tbl">
+        <thead><tr><th>ID</th><th>Cliente</th><th>Total</th><th>Pagamento</th><th>Status</th><th>Data</th></tr></thead>
+        <tbody>${recent.map(o => orderRow(o)).join('')}</tbody>
+      </table>
+    </div>`;
+  } catch (e) {
+    area.innerHTML = '<div style="color:var(--red);padding:40px">Erro ao carregar. Verifique o token de admin.</div>';
+  }
+}
+
+// ── ORDERS ────────────────────────────────────────────────────
+async function renderOrders() {
+  const area = document.getElementById('mainArea');
+  area.innerHTML = '<div style="color:var(--g5);padding:40px;text-align:center">Carregando pedidos...</div>';
+  const orders = await fetch(`${API}/admin/orders`, { headers: { 'x-admin-token': TOKEN } }).then(r => r.json());
+
+  area.innerHTML = `
+  <div class="sec-h"><h2>Todos os Pedidos</h2><span style="font-size:12px;color:var(--g5)">${orders.length} pedidos</span></div>
+  <div style="overflow-x:auto">
+    <table class="tbl">
+      <thead><tr><th>ID</th><th>Cliente</th><th>Produtos</th><th>Total</th><th>Pagamento</th><th>Pedido</th><th>Data</th></tr></thead>
+      <tbody>${orders.map(o => orderRow(o, true)).join('')}</tbody>
+    </table>
+  </div>`;
+}
+
+function payPill(s) {
+  const m = { pending: ['pend','Aguardando'], approved: ['appr','Aprovado'], rejected: ['canc','Rejeitado'], cancelled: ['canc','Cancelado'] };
+  const [cls, label] = m[s] || ['pend', s];
+  return `<span class="pill ${cls}">${label}</span>`;
+}
+
+function orderPill(s) {
+  const m = { new: ['new','Novo'], confirmed: ['conf','Confirmado'], shipped: ['ship','Enviado'], delivered: ['deliv','Entregue'], cancelled: ['canc','Cancelado'] };
+  const [cls, label] = m[s] || ['new', s];
+  return `<span class="pill ${cls}">${label}</span>`;
+}
+
+function orderRow(o, showProducts = false) {
+  const items = typeof o.items === 'string' ? JSON.parse(o.items) : o.items;
+  return `<tr>
+    <td style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--blue-b)">${o.id}</td>
+    <td><strong>${o.customer_name}</strong><br><span style="font-size:11px;color:var(--g5)">${o.customer_phone}</span></td>
+    ${showProducts ? `<td style="font-size:11px;color:var(--g5)">${items?.map(i => `${i.name} ×${i.qty} (${i.size})`).join('<br>') || '-'}</td>` : ''}
+    <td style="font-family:'JetBrains Mono',monospace;font-weight:700">${fmt(o.total)}</td>
+    <td>${payPill(o.payment_status)}</td>
+    <td>
+      ${orderPill(o.order_status)}
+      <br>
+      <select class="st-sel" style="margin-top:6px" onchange="updOrder('${o.id}',this.value)">
+        <option value="new" ${o.order_status==='new'?'selected':''}>Novo</option>
+        <option value="confirmed" ${o.order_status==='confirmed'?'selected':''}>Confirmado</option>
+        <option value="shipped" ${o.order_status==='shipped'?'selected':''}>Enviado</option>
+        <option value="delivered" ${o.order_status==='delivered'?'selected':''}>Entregue</option>
+        <option value="cancelled" ${o.order_status==='cancelled'?'selected':''}>Cancelado</option>
+      </select>
+    </td>
+    <td style="font-size:11px;color:var(--g5)">${fdate(o.created_at)}</td>
+  </tr>`;
+}
+
+async function updOrder(id, status) {
+  await fetch(`${API}/admin/orders/${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', 'x-admin-token': TOKEN },
+    body: JSON.stringify({ order_status: status })
+  });
+  toast('Status atualizado ✓', 'ok');
+}
+
+// ── PRODUCTS + IMAGE MANAGER ──────────────────────────────────
+async function renderProducts() {
+  const area = document.getElementById('mainArea');
+  area.innerHTML = '<div style="color:var(--g5);padding:40px;text-align:center">Carregando produtos...</div>';
+  const products = await fetch(`${API}/admin/products`, { headers: { 'x-admin-token': TOKEN } }).then(r => r.json());
+
+  area.innerHTML = `
+  <div class="sec-h">
+    <h2>Produtos e Imagens</h2>
+    <span style="font-size:12px;color:var(--g5)">${products.length} produtos · Clique em "Gerenciar Imagens" para fazer upload</span>
+  </div>
+  <div class="prod-grid">
+    ${products.map(p => {
+      const img = p.images?.[0];
+      return `
+      <div class="prod-card">
+        <div class="prod-card-img">
+          ${img
+            ? `<img src="${img}" alt="${p.name}" onerror="this.parentElement.innerHTML='<div class=no-img><div class=no-img-icon>◻</div><span>Sem imagem</span></div>'">`
+            : '<div class="no-img"><div class="no-img-icon">◻</div><span>Sem imagem</span></div>'}
+          <div class="img-count">${p.images?.length || 0} foto${p.images?.length !== 1 ? 's' : ''}</div>
+        </div>
+        <div class="prod-card-body">
+          <div class="prod-card-brand">${p.brand} · ${p.sub}</div>
+          <div class="prod-card-name">${p.name}</div>
+          <div class="prod-card-price">${Number(p.price).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</div>
+          <div class="prod-card-actions">
+            <button class="btn-sm" onclick="openImgManager('${p.id}','${p.name.replace(/'/g,"\\'")}')">Gerenciar Imagens</button>
+            <button class="btn-sm ghost" onclick="toggleActive('${p.id}',${p.active})">${p.active ? 'Desativar' : 'Ativar'}</button>
+          </div>
+        </div>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+async function toggleActive(id, current) {
+  await fetch(`${API}/admin/products/${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', 'x-admin-token': TOKEN },
+    body: JSON.stringify({ active: !current })
+  });
+  toast(`Produto ${current ? 'desativado' : 'ativado'} ✓`, 'ok');
+  renderProducts();
+}
+
+// ── IMAGE MANAGER ─────────────────────────────────────────────
+async function openImgManager(productId, productName) {
+  // Carrega produto atualizado
+  const products = await fetch(`${API}/admin/products`, { headers: { 'x-admin-token': TOKEN } }).then(r => r.json());
+  const p = products.find(x => x.id === productId);
+  const images = p?.images || [];
+
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay';
+  modal.id = 'imgModal';
+  modal.innerHTML = `
+  <div class="modal">
+    <div class="modal-head">
+      <h3>Imagens — ${productName}</h3>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:12px;color:var(--g5);margin-bottom:16px">
+        ${images.length}/3 imagens · Recomendado: fundo branco, produto centralizado, proporção quadrada
+      </p>
+
+      <div class="img-grid" id="imgGrid">
+        ${images.map(url => `
+        <div class="img-slot">
+          <img src="${url}" alt="foto do produto"/>
+          <button class="img-slot-del" onclick="delImg('${productId}','${url}')">✕</button>
+        </div>`).join('')}
+        ${images.length < 3 ? `
+        <div class="img-slot" style="border:2px dashed rgba(59,130,246,.2);display:flex;align-items:center;justify-content:center;color:var(--g7);font-size:11px;text-align:center;padding:12px">
+          Foto ${images.length + 1}<br><span style="font-size:9px;color:var(--g7)">será adicionada</span>
+        </div>` : ''}
+      </div>
+
+      ${images.length < 3 ? `
+      <div class="upload-area" id="uploadArea">
+        <input type="file" accept="image/jpeg,image/png,image/webp" onchange="uploadImg('${productId}',this)" id="fileInput"/>
+        <div class="upload-icon">◻</div>
+        <div class="upload-title">Clique ou arraste uma imagem aqui</div>
+        <div class="upload-sub">JPG, PNG ou WEBP · Máximo 5MB</div>
+        <div class="upload-progress" id="uploadProg">
+          <div class="upload-progress-bar" id="uploadBar" style="width:0%"></div>
+        </div>
+      </div>` : `<p style="text-align:center;color:var(--g5);font-size:13px;padding:16px">Limite de 3 imagens atingido. Remova uma para adicionar outra.</p>`}
+
+      <div style="margin-top:20px;padding-top:16px;border-top:1px solid rgba(255,255,255,.06)">
+        <p style="font-size:11px;color:var(--g5);line-height:1.7">
+          ✓ Use fotos com fundo branco para melhor resultado<br>
+          ✓ A primeira foto é a imagem principal do card<br>
+          ✓ As fotos ficam salvas no servidor permanentemente
+        </p>
+      </div>
+    </div>
+  </div>`;
+
+  document.body.appendChild(modal);
+  modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+
+  // Drag and drop
+  const area = document.getElementById('uploadArea');
+  if (area) {
+    area.addEventListener('dragover', e => { e.preventDefault(); area.classList.add('drag'); });
+    area.addEventListener('dragleave', () => area.classList.remove('drag'));
+    area.addEventListener('drop', e => {
+      e.preventDefault();
+      area.classList.remove('drag');
+      const file = e.dataTransfer.files[0];
+      if (file) uploadImgFile(productId, file);
+    });
+  }
+}
+
+function closeModal() {
+  document.getElementById('imgModal')?.remove();
+  renderProducts();
+}
+
+async function uploadImg(productId, input) {
+  const file = input.files[0];
+  if (!file) return;
+  await uploadImgFile(productId, file);
+}
+
+async function uploadImgFile(productId, file) {
+  if (file.size > 5 * 1024 * 1024) {
+    toast('Imagem muito grande (máx. 5MB)', 'err');
+    return;
+  }
+
+  const prog = document.getElementById('uploadProg');
+  const bar = document.getElementById('uploadBar');
+  if (prog) { prog.style.display = 'block'; bar.style.width = '30%'; }
+
+  try {
+    const form = new FormData();
+    form.append('image', file);
+
+    if (bar) bar.style.width = '60%';
+
+    const res = await fetch(`/api/admin/products/${productId}/images`, {
+      method: 'POST',
+      headers: { 'x-admin-token': TOKEN },
+      body: form
+    });
+
+    if (bar) bar.style.width = '100%';
+
+    if (!res.ok) throw new Error('Upload falhou');
+    const data = await res.json();
+
+    toast('Imagem enviada com sucesso ✓', 'ok');
+    setTimeout(() => {
+      closeModal();
+      setTimeout(() => openImgManager(productId, ''), 100);
+    }, 800);
+  } catch (err) {
+    toast('Erro no upload: ' + err.message, 'err');
+    if (prog) prog.style.display = 'none';
+  }
+}
+
+async function delImg(productId, url) {
+  if (!confirm('Remover esta imagem?')) return;
+  const res = await fetch(`/api/admin/products/${productId}/images`, {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json', 'x-admin-token': TOKEN },
+    body: JSON.stringify({ url })
+  });
+  if (res.ok) {
+    toast('Imagem removida ✓', 'ok');
+    closeModal();
+    setTimeout(() => openImgManager(productId, ''), 100);
+  } else {
+    toast('Erro ao remover imagem', 'err');
+  }
+}
+</script>
+</body>
+</html>
