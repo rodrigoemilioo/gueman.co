@@ -46,6 +46,8 @@ function requireAdmin(req, res, next) {
 // Listar todos os produtos ativos
 app.get('/api/products', async (req, res) => {
   try {
+    console.log('Supabase URL:', process.env.SUPABASE_URL);
+console.log('Service Key existe:', !!process.env.SUPABASE_SERVICE_KEY);
     const { brand, category, badge, featured } = req.query;
     let query = supabase.from('products').select('*').eq('active', true).order('featured', { ascending: false });
 
