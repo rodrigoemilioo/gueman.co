@@ -468,7 +468,7 @@ const res = await fetch(`/api/admin/products/images?id=${productId}`, {
 
 async function delImg(productId, url) {
   if (!confirm('Remover esta imagem?')) return;
-  const res = await fetch(`/api/admin/products/${productId}/images`, {
+  const res = await fetch(`/api/admin/products/images?id=${productId}`, {
     method: 'DELETE',
     headers: { 'Content-Type': 'application/json', 'x-admin-token': TOKEN },
     body: JSON.stringify({ url })
