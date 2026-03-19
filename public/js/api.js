@@ -73,7 +73,7 @@ const API = {
 
   async adminUploadImage(token, productId, file) {
     const form = new FormData();
-    form.append('image', file);
+    form.append('file', file);
     const res = await fetch(`${API_BASE}/admin/products/images?id=${productId}`, {
       method: 'POST',
       headers: { 'x-admin-token': token },
