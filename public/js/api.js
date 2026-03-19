@@ -74,7 +74,7 @@ const API = {
   async adminUploadImage(token, productId, file) {
     const form = new FormData();
     form.append('image', file);
-    const res = await fetch(`${API_BASE}/admin/products/${productId}/images`, {
+    const res = await fetch(`${API_BASE}/admin/products/images?id=${productId}`, {
       method: 'POST',
       headers: { 'x-admin-token': token },
       body: form
@@ -84,7 +84,7 @@ const API = {
   },
 
   async adminDeleteImage(token, productId, url) {
-    const res = await fetch(`${API_BASE}/admin/products/${productId}/images`, {
+    const res = await fetch(`${API_BASE}/admin/products/images?id=${productId}`, {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json', 'x-admin-token': token },
       body: JSON.stringify({ url })
