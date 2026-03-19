@@ -442,11 +442,9 @@ async function uploadImgFile(productId, file) {
 
   try {
     const form = new FormData();
-    form.append('image', file);
+form.append('file', file);
 
-    if (bar) bar.style.width = '60%';
-
-    const res = await fetch(`/api/admin/products/${productId}/images`, {
+const res = await fetch(`/api/admin/products/images?id=${productId}`, {
       method: 'POST',
       headers: { 'x-admin-token': TOKEN },
       body: form
