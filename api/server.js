@@ -57,8 +57,11 @@ console.log('Service Key existe:', !!process.env.SUPABASE_SERVICE_KEY);
     if (featured) query = query.eq('featured', true);
 
     const { data, error } = await query;
-    if (error) throw error;
-    res.json(data);
+if (error) {
+  console.log('SUPABASE ERROR:', JSON.stringify(error));
+  throw error;
+}
+res.json(data);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
