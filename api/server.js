@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const fetch = require('node-fetch');
 const { createClient } = require('@supabase/supabase-js');
 
 const app = express();
@@ -13,57 +14,115 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_KEY
 );
 
+const ASAAS_API_KEY = process.env.ASAAS_API_KEY;
+
+// =========================
+// PRODUTOS
+// =========================
 app.get('/api/products', async (req, res) => {
-  try {
-    const { data, error } = await supabase
-      .from('products')
-      .select('*')
-      .eq('active', true);
-    if (error) {
-      console.log('DB ERROR:', error.message, error.code);
-      return res.status(500).json({ error: error.message });
-    }
-    res.json(data);
-  } catch (err) {
-    console.log('CATCH ERROR:', err.message);
-    res.status(500).json({ error: err.message });
-  }
+  const { data, error } = await supabase.from('products').select('*').eq('active', true);
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data);
 });
 
-app.get('/api/products/:id', async (req, res) => {
-  try {
-    const { data, error } = await supabase
-      .from('products')
-      .select('*')
-      .eq('id', req.params.id)
-      .single();
-    if (error) return res.status(404).json({ error: error.message });
-    res.json(data);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
+// =========================
+// CRIAR PEDIDO + PAGAMENTO
+// =========================
 app.post('/api/orders', async (req, res) => {
   try {
-    const { customer, items, subtotal, shipping, total, payment_method } = req.body;
+    const { customer, items, subtotal, shipping, total } = req.body;
+
     const orderId = 'GUE-' + Date.now();
+
+    // 🔥 CRIAR PAGAMENTO NO ASAAS
+    const paymentRes = await fetch('https://api.asaas.com/v3/payments', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        access_token: ASAAS_API_KEY
+      },
+      body: JSON.stringify({
+        billingType: 'PIX',
+        value: total,
+        dueDate: new Date().toISOString().split('T')[0],
+        description: `Pedido ${orderId}`,
+        customer: {
+          name: customer.name,
+          cpfCnpj: customer.cpf,
+          phone: customer.phone
+        }
+      })
+    });
+
+    const paymentData = await paymentRes.json();
+
+    if (!paymentData.id) {
+      return res.status(500).json({ error: 'Erro ao criar pagamento', details: paymentData });
+    }
+
+    // 💾 SALVAR PEDIDO
     const { data, error } = await supabase.from('orders').insert({
       id: orderId,
       customer_name: customer.name,
       customer_phone: customer.phone,
       customer_email: customer.email || null,
       customer_address: customer.address,
-      items, subtotal, shipping: shipping || 0, total,
-      payment_method, payment_status: 'pending', order_status: 'new'
+      items,
+      subtotal,
+      shipping: shipping || 0,
+      total,
+      payment_method: 'pix',
+      payment_status: 'pending',
+      order_status: 'pending',
+      asaas_payment_id: paymentData.id
     }).select().single();
+
     if (error) return res.status(500).json({ error: error.message });
-    res.status(201).json({ success: true, order: data });
+
+    // 🔲 RETORNAR PIX
+    res.status(201).json({
+      success: true,
+      order: data,
+      payment: {
+        qrCode: paymentData.pixQrCode,
+        copyPaste: paymentData.pixCopyPaste
+      }
+    });
+
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
+// =========================
+// WEBHOOK ASAAS
+// =========================
+app.post('/api/webhooks/asaas', async (req, res) => {
+  try {
+    const event = req.body;
+
+    if (event.event === 'PAYMENT_RECEIVED') {
+      const paymentId = event.payment.id;
+
+      await supabase
+        .from('orders')
+        .update({
+          payment_status: 'approved',
+          order_status: 'paid'
+        })
+        .eq('asaas_payment_id', paymentId);
+    }
+
+    res.sendStatus(200);
+  } catch (err) {
+    console.log('Webhook error:', err.message);
+    res.sendStatus(500);
+  }
+});
+
+// =========================
+// ADMIN (mantido)
+// =========================
 app.post('/api/admin/login', (req, res) => {
   const { password } = req.body;
   if (password === process.env.ADMIN_PASSWORD) {
@@ -81,41 +140,11 @@ function requireAdmin(req, res, next) {
 }
 
 app.get('/api/admin/orders', requireAdmin, async (req, res) => {
-  const { data, error } = await supabase.from('orders').select('*').order('created_at', { ascending: false });
-  if (error) return res.status(500).json({ error: error.message });
+  const { data } = await supabase.from('orders').select('*').order('created_at', { ascending: false });
   res.json(data);
 });
 
-app.patch('/api/admin/orders/:id', requireAdmin, async (req, res) => {
-  const { data, error } = await supabase.from('orders').update(req.body).eq('id', req.params.id).select().single();
-  if (error) return res.status(500).json({ error: error.message });
-  res.json({ success: true, order: data });
-});
-
-app.get('/api/admin/products', requireAdmin, async (req, res) => {
-  const { data, error } = await supabase.from('products').select('*').order('created_at', { ascending: false });
-  if (error) return res.status(500).json({ error: error.message });
-  res.json(data);
-});
-
-app.patch('/api/admin/products/:id', requireAdmin, async (req, res) => {
-  const { data, error } = await supabase.from('products').update(req.body).eq('id', req.params.id).select().single();
-  if (error) return res.status(500).json({ error: error.message });
-  res.json({ success: true, product: data });
-});
-
-app.get('/api/admin/stats', requireAdmin, async (req, res) => {
-  const { data: orders } = await supabase.from('orders').select('total, payment_status, order_status');
-  const { data: products } = await supabase.from('products').select('id');
-  const revenue = (orders || []).filter(o => o.payment_status === 'approved').reduce((s, o) => s + Number(o.total), 0);
-  res.json({
-    total_orders: (orders || []).length,
-    revenue,
-    pending_orders: (orders || []).filter(o => o.order_status === 'new').length,
-    total_products: (products || []).length
-  });
-});
-
+// =========================
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/index.html'));
 });
