@@ -25,7 +25,6 @@ app.get('/api/products', async (req, res) => {
   res.json(data);
 });
 
-// 🔥 ROTA QUE FALTAVA (CORRIGE SEU ERRO)
 app.get('/api/products/:id', async (req, res) => {
   try {
     const { data, error } = await supabase
@@ -51,43 +50,28 @@ app.post('/api/orders', async (req, res) => {
 
     const orderId = 'GUE-' + Date.now();
 
-    // 1. CRIAR CLIENTE NO ASAAS
-const customerRes = await fetch('https://api.asaas.com/v3/customers', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-    access_token: ASAAS_API_KEY
-  },
-  body: JSON.stringify({
-    name: customer.name,
-    cpfCnpj: customer.cpf,
-    phone: customer.phone
-  })
-});
+    // 🔹 1. CRIAR CLIENTE
+    const customerRes = await fetch('https://api.asaas.com/v3/customers', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        access_token: ASAAS_API_KEY
+      },
+      body: JSON.stringify({
+        name: customer.name,
+        cpfCnpj: customer.cpf,
+        phone: customer.phone
+      })
+    });
 
-const customerData = await customerRes.json();
+    const customerData = await customerRes.json();
 
-if (!customerData.id) {
-  return res.status(500).json({ error: 'Erro ao criar cliente no Asaas', details: customerData });
-}
+    if (!customerData.id) {
+      return res.status(500).json({ error: 'Erro ao criar cliente', details: customerData });
+    }
 
-// 2. CRIAR PAGAMENTO
-const paymentRes = await fetch('https://api.asaas.com/v3/payments', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-    access_token: ASAAS_API_KEY
-  },
-  body: JSON.stringify({
-    billingType: 'PIX',
-    customer: customerData.id,
-    value: total,
-    dueDate: new Date().toISOString().split('T')[0],
-    description: `Pedido ${orderId}`
-  })
-});
-
-const paymentData = await paymentRes.json();
+    // 🔹 2. CRIAR PAGAMENTO
+    const paymentRes = await fetch('https://api.asaas.com/v3/payments', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -95,14 +79,10 @@ const paymentData = await paymentRes.json();
       },
       body: JSON.stringify({
         billingType: 'PIX',
+        customer: customerData.id,
         value: total,
         dueDate: new Date().toISOString().split('T')[0],
-        description: `Pedido ${orderId}`,
-        customer: {
-          name: customer.name,
-          cpfCnpj: customer.cpf,
-          phone: customer.phone
-        }
+        description: `Pedido ${orderId}`
       })
     });
 
@@ -112,6 +92,7 @@ const paymentData = await paymentRes.json();
       return res.status(500).json({ error: 'Erro ao criar pagamento', details: paymentData });
     }
 
+    // 🔹 SALVAR PEDIDO
     const { data, error } = await supabase.from('orders').insert({
       id: orderId,
       customer_name: customer.name,
@@ -140,12 +121,13 @@ const paymentData = await paymentRes.json();
     });
 
   } catch (err) {
+    console.log(err);
     res.status(500).json({ error: err.message });
   }
 });
 
 // =========================
-// WEBHOOK ASAAS
+// WEBHOOK
 // =========================
 app.post('/api/webhooks/asaas', async (req, res) => {
   try {
