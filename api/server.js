@@ -51,7 +51,43 @@ app.post('/api/orders', async (req, res) => {
 
     const orderId = 'GUE-' + Date.now();
 
-    const paymentRes = await fetch('https://api.asaas.com/v3/payments', {
+    // 1. CRIAR CLIENTE NO ASAAS
+const customerRes = await fetch('https://api.asaas.com/v3/customers', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    access_token: ASAAS_API_KEY
+  },
+  body: JSON.stringify({
+    name: customer.name,
+    cpfCnpj: customer.cpf,
+    phone: customer.phone
+  })
+});
+
+const customerData = await customerRes.json();
+
+if (!customerData.id) {
+  return res.status(500).json({ error: 'Erro ao criar cliente no Asaas', details: customerData });
+}
+
+// 2. CRIAR PAGAMENTO
+const paymentRes = await fetch('https://api.asaas.com/v3/payments', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    access_token: ASAAS_API_KEY
+  },
+  body: JSON.stringify({
+    billingType: 'PIX',
+    customer: customerData.id,
+    value: total,
+    dueDate: new Date().toISOString().split('T')[0],
+    description: `Pedido ${orderId}`
+  })
+});
+
+const paymentData = await paymentRes.json();
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
