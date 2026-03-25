@@ -1,3 +1,4 @@
+const ASAAS_WEBHOOK_TOKEN = process.env.ASAAS_WEBHOOK_TOKEN;
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
