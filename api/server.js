@@ -2,7 +2,6 @@ const ASAAS_WEBHOOK_TOKEN = process.env.ASAAS_WEBHOOK_TOKEN;
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const fetch = require('node-fetch');
 const { createClient } = require('@supabase/supabase-js');
 
 const app = express();
@@ -26,6 +25,23 @@ app.get('/api/products', async (req, res) => {
   res.json(data);
 });
 
+// 🔥 ROTA QUE FALTAVA (CORRIGE SEU ERRO)
+app.get('/api/products/:id', async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('products')
+      .select('*')
+      .eq('id', req.params.id)
+      .single();
+
+    if (error) return res.status(404).json({ error: error.message });
+
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // =========================
 // CRIAR PEDIDO + PAGAMENTO
 // =========================
@@ -35,7 +51,6 @@ app.post('/api/orders', async (req, res) => {
 
     const orderId = 'GUE-' + Date.now();
 
-    // 🔥 CRIAR PAGAMENTO NO ASAAS
     const paymentRes = await fetch('https://api.asaas.com/v3/payments', {
       method: 'POST',
       headers: {
@@ -61,7 +76,6 @@ app.post('/api/orders', async (req, res) => {
       return res.status(500).json({ error: 'Erro ao criar pagamento', details: paymentData });
     }
 
-    // 💾 SALVAR PEDIDO
     const { data, error } = await supabase.from('orders').insert({
       id: orderId,
       customer_name: customer.name,
@@ -80,7 +94,6 @@ app.post('/api/orders', async (req, res) => {
 
     if (error) return res.status(500).json({ error: error.message });
 
-    // 🔲 RETORNAR PIX
     res.status(201).json({
       success: true,
       order: data,
@@ -128,7 +141,7 @@ app.post('/api/webhooks/asaas', async (req, res) => {
 });
 
 // =========================
-// ADMIN (mantido)
+// ADMIN
 // =========================
 app.post('/api/admin/login', (req, res) => {
   const { password } = req.body;
