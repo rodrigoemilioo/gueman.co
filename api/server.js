@@ -50,7 +50,14 @@ app.post('/api/orders', async (req, res) => {
 
     const orderId = 'GUE-' + Date.now();
 
-    // 🔹 1. CRIAR CLIENTE
+    // 🔥 LIMPEZA DE DADOS
+    const cleanCpf = (customer?.cpf || "12345678909").replace(/\D/g, '');
+    const cleanPhone = (customer?.phone || "11999999999").replace(/\D/g, '');
+    const cleanTotal = Number(total) || 0;
+
+    // =========================
+    // 1. CRIAR CLIENTE
+    // =========================
     const customerRes = await fetch('https://api.asaas.com/v3/customers', {
       method: 'POST',
       headers: {
@@ -58,19 +65,22 @@ app.post('/api/orders', async (req, res) => {
         access_token: ASAAS_API_KEY
       },
       body: JSON.stringify({
-        name: customer.name,
-        cpfCnpj: customer.cpf,
-        phone: customer.phone
+        name: customer?.name || "Cliente",
+        cpfCnpj: cleanCpf,
+        phone: cleanPhone
       })
     });
 
     const customerData = await customerRes.json();
+    console.log("ASAAS CUSTOMER:", customerData);
 
     if (!customerData.id) {
       return res.status(500).json({ error: 'Erro ao criar cliente', details: customerData });
     }
 
-    // 🔹 2. CRIAR PAGAMENTO
+    // =========================
+    // 2. CRIAR PAGAMENTO
+    // =========================
     const paymentRes = await fetch('https://api.asaas.com/v3/payments', {
       method: 'POST',
       headers: {
@@ -80,29 +90,32 @@ app.post('/api/orders', async (req, res) => {
       body: JSON.stringify({
         billingType: 'PIX',
         customer: customerData.id,
-        value: total,
+        value: cleanTotal,
         dueDate: new Date().toISOString().split('T')[0],
         description: `Pedido ${orderId}`
       })
     });
 
     const paymentData = await paymentRes.json();
+    console.log("ASAAS PAYMENT:", paymentData);
 
     if (!paymentData.id) {
       return res.status(500).json({ error: 'Erro ao criar pagamento', details: paymentData });
     }
 
-    // 🔹 SALVAR PEDIDO
+    // =========================
+    // SALVAR PEDIDO
+    // =========================
     const { data, error } = await supabase.from('orders').insert({
       id: orderId,
       customer_name: customer.name,
-      customer_phone: customer.phone,
+      customer_phone: cleanPhone,
       customer_email: customer.email || null,
       customer_address: customer.address,
       items,
       subtotal,
       shipping: shipping || 0,
-      total,
+      total: cleanTotal,
       payment_method: 'pix',
       payment_status: 'pending',
       order_status: 'pending',
@@ -121,7 +134,7 @@ app.post('/api/orders', async (req, res) => {
     });
 
   } catch (err) {
-    console.log(err);
+    console.log("ERRO GERAL:", err);
     res.status(500).json({ error: err.message });
   }
 });
