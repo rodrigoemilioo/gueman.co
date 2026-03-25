@@ -100,6 +100,12 @@ app.post('/api/orders', async (req, res) => {
 // =========================
 app.post('/api/webhooks/asaas', async (req, res) => {
   try {
+    const token = req.headers['asaas-access-token'];
+
+    if (token !== ASAAS_WEBHOOK_TOKEN) {
+      return res.status(401).json({ error: 'Invalid token' });
+    }
+
     const event = req.body;
 
     if (event.event === 'PAYMENT_RECEIVED') {
